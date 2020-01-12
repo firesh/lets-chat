@@ -1,0 +1,5 @@
+_sources
+.git
+package-lock.json
+node_modules
+uploads/*
