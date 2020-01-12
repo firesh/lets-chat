@@ -13,6 +13,7 @@
         events: {
             'scroll .lcb-messages': 'updateScrollLock',
             'keypress .lcb-entry-input': 'sendMessage',
+            'paste .lcb-entry-input': 'handlePast',
             'click .lcb-entry-button': 'sendMessage',
             'click .lcb-room-toggle-sidebar': 'toggleSidebar',
             'click .show-edit-room': 'showEditRoom',
@@ -20,7 +21,7 @@
             'click .submit-edit-room': 'submitEditRoom',
             'click .archive-room': 'archiveRoom',
             'click .lcb-room-poke': 'poke',
-            'click .lcb-upload-trigger': 'upload'
+            'click .lcb-upload-trigger': 'upload',
         },
         initialize: function(options) {
             this.client = options.client;
@@ -445,7 +446,51 @@
             var $messages = this.$('.lcb-message[data-owner="' + user.id + '"]');
             $messages.find('.lcb-message-username').text('@' + user.get('username'));
             $messages.find('.lcb-message-displayname').text(user.get('displayName'));
-        }
+        },
+        handlePast: function(e) {
+            if (e.clipboardData || e.originalEvent) {
+                var clipboardData = (e.clipboardData || e.originalEvent.clipboardData)
+                var file
+                for (var item of clipboardData.items) {
+                  if (item.type.indexOf('image') >= 0) {
+                    file = item.getAsFile()
+                  }
+                }
+                if (!file) return
+                var formData = new FormData()
+                formData.append('room', this.model.id,)
+                formData.append('post', true)
+                formData.append('file', file)
+                $.ajax({
+                    type:"POST",
+                    url:"files",
+                    data: formData,
+                    cache: false,
+                    processData: false,
+                    contentType: false,
+                    success: function (msg) {
+                        console.log("image uploaded")
+                    },
+                    //请求失败触发的方法
+                    error:function(XMLHttpRequest, textStatus, errorThrown){
+                        console.log("image upload fail")
+                    }
+                })
+            }
+            // if (e.type === 'keypress' && e.keyCode !== 13 || e.altKey) return;
+            // if (e.type === 'keypress' && e.keyCode === 13 && e.shiftKey) return;
+            // e.preventDefault();
+            // if (!this.client.status.get('connected')) return;
+            // var $textarea = this.$('.lcb-entry-input');
+            // if (!$textarea.val()) return;
+            // this.client.events.trigger('messages:send', {
+            //     room: this.model.id,
+            //     text: $textarea.val()
+            // });
+            // $textarea.val('');
+            // this.scrollLocked = true;
+            // this.scrollMessages();
+        },
     });
 
     window.LCB.RoomSidebarListView = Backbone.View.extend({
