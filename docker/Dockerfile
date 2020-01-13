@@ -1,8 +1,6 @@
-FROM node:0.12-slim
-MAINTAINER SD Elements
+FROM node:10-alpine
 
-RUN sed -i "1ideb http://mirrors.aliyun.com/debian/ jessie main non-free contrib\n\
-deb-src http://mirrors.aliyun.com/debian/ jessie main non-free contrib\n" /etc/apt/sources.list
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
 ENV BUILD_DEPS='g++ gcc git make python' \
     LCB_PLUGINS='lets-chat-ldap lets-chat-s3'
@@ -13,15 +11,12 @@ WORKDIR /usr/src/app
 ADD . .
 
 RUN set -x \
-&&  apt-get update \
-&&  apt-get install -y $BUILD_DEPS --no-install-recommends \
-&&  rm -rf /var/lib/apt/lists/* \
+&&  apk add --no-cache $BUILD_DEPS \
 &&  npm install --production \
 &&  npm install $LCB_PLUGINS \
 &&  npm dedupe \
-&&  npm cache clean \
 &&  rm -rf /tmp/npm* \
-&&  apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $BUILD_DEPS
+&&  apk del $BUILD_DEPS
 
 
 RUN chown node:node uploads \
